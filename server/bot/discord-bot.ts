@@ -5,6 +5,7 @@ import { WordValidator } from './word-validator';
 import { log } from '../vite';
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 
 export class DiscordBot {
   private client: Client;
@@ -44,7 +45,11 @@ export class DiscordBot {
    */
   private getTokenFromConfig(): string {
     try {
-      const configPath = path.resolve(__dirname, '../config/bot-config.json');
+      // Use import.meta.url to get current module path in ESM
+      const moduleURL = new URL(import.meta.url);
+      const modulePath = path.dirname(fileURLToPath(moduleURL));
+      const configPath = path.resolve(modulePath, '../config/bot-config.json');
+      
       if (fs.existsSync(configPath)) {
         const configData = fs.readFileSync(configPath, 'utf8');
         const config = JSON.parse(configData);

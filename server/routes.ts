@@ -48,6 +48,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // Ping endpoint for keeping the bot alive (for services like cron-job.org)
+  app.get("/ping", async (req, res) => {
+    try {
+      const status = discordBot.getStatus();
+      res.json({
+        message: "Bot je aktivan!",
+        online: status.online,
+        uptime: process.uptime(), // vreme od pokretanja u sekundama
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        error: "Failed to ping",
+        message: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  });
 
   // Add a single word to the dictionary
   app.post("/api/dictionary/add-word", async (req: Request, res: Response) => {
