@@ -16,7 +16,7 @@ export class WordValidator {
     const __dirname = path.dirname(__filename);
     
     // Set path to the dictionary file
-    this.dictionaryPath = path.resolve(__dirname, '../data/serbian-dictionary.json');
+    this.dictionaryPath = path.resolve(__dirname, '../data/serbian-dictionary-5000.json');
     
     // Load the dictionary
     this.loadDictionary();
