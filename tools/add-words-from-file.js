@@ -1,52 +1,83 @@
 import fs from 'fs';
-import { fileURLToPath } from 'url';
 import path from 'path';
+import { fileURLToPath } from 'url';
+import readline from 'readline';
 
 // Get directory path
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const dictionaryPath = path.resolve(__dirname, '../server/data/serbian-dictionary-mega.json');
-const newWordsPath = path.resolve(__dirname, '../attached_assets/Pasted-a-A-B-AA-AAA-AAOM-AAS-AB-aba-Aba-ABAB-aba-e-abacija-abacijama-abacije-abaciji-abacijo-abacijom-abaci-1743007128261.txt');
 
-// Funkcija za dodavanje reči iz fajla u rečnik
-async function addWordsFromFile() {
+/**
+ * Dodaje reči iz datoteke u rečnik
+ * @param {string} filePath - Putanja do datoteke sa rečima, jedna reč po liniji
+ */
+async function addWordsFromFile(filePath) {
   try {
+    // Proveri da li datoteka sa rečima postoji
+    if (!fs.existsSync(filePath)) {
+      console.error(`Datoteka ${filePath} ne postoji.`);
+      return;
+    }
+
     // Učitaj postojeći rečnik
-    const dictionaryData = fs.readFileSync(dictionaryPath, 'utf8');
-    let existingWords = new Set(JSON.parse(dictionaryData));
-    
-    console.log(`Trenutni broj reči u rečniku: ${existingWords.size}`);
-    
-    // Učitaj nove reči iz fajla (čitamo ih red po red da izbegnemo preopterećenje memorije)
-    const content = fs.readFileSync(newWordsPath, 'utf8');
-    const newWords = content.split('\n').map(word => word.trim()).filter(word => word.length > 0);
-    
-    console.log(`Broj reči u priloženom fajlu: ${newWords.length}`);
-    
-    // Brojač za dodane reči
-    let addedCount = 0;
-    
-    // Dodaj reči u rečnik (Set automatski eliminiše duplikate)
-    for (const word of newWords) {
-      // Dodajemo samo reči sa 2 ili više karaktera, koje su samo mala slova (nemaju velika slova ili specijalne karaktere)
-      if (word.length >= 2 && /^[a-zčćšžđ]+$/.test(word)) {
-        if (!existingWords.has(word)) {
-          existingWords.add(word);
-          addedCount++;
-        }
+    let dictionary = [];
+    if (fs.existsSync(dictionaryPath)) {
+      try {
+        const data = fs.readFileSync(dictionaryPath, 'utf8');
+        dictionary = JSON.parse(data);
+        console.log(`Učitan rečnik sa ${dictionary.length} reči.`);
+      } catch (error) {
+        console.error(`Greška pri učitavanju rečnika: ${error.message}`);
+        dictionary = [];
+      }
+    } else {
+      console.log('Rečnik ne postoji, biće kreiran novi.');
+    }
+
+    // Kreiraj Set radi brže provere duplikata
+    const existingWords = new Set(dictionary);
+    const newWords = [];
+
+    // Čitaj reči iz datoteke liniju po liniju
+    const fileStream = fs.createReadStream(filePath);
+    const rl = readline.createInterface({
+      input: fileStream,
+      crlfDelay: Infinity
+    });
+
+    for await (const line of rl) {
+      const word = line.trim().toLowerCase();
+      // Dodaj samo reči koje su duže od 1 karaktera i nisu već u rečniku
+      if (word.length > 1 && !existingWords.has(word)) {
+        newWords.push(word);
+        existingWords.add(word);
       }
     }
-    
-    // Konvertuj Set nazad u niz i sačuvaj
-    const updatedWords = Array.from(existingWords);
-    fs.writeFileSync(dictionaryPath, JSON.stringify(updatedWords, null, 2), 'utf8');
-    
-    console.log(`Novi broj reči u rečniku: ${updatedWords.length}`);
-    console.log(`Dodato ${addedCount} novih reči.`);
+
+    if (newWords.length === 0) {
+      console.log('Nema novih reči za dodavanje u rečnik.');
+      return;
+    }
+
+    // Spoji nove reči sa postojećim rečnikom i sortiraj
+    const updatedDictionary = Array.from(existingWords).sort();
+
+    // Sačuvaj ažurirani rečnik
+    fs.writeFileSync(dictionaryPath, JSON.stringify(updatedDictionary), 'utf8');
+    console.log(`Uspešno dodato ${newWords.length} novih reči u rečnik.`);
+    console.log(`Ukupno reči u rečniku: ${updatedDictionary.length}`);
   } catch (error) {
-    console.error(`Greška pri dodavanju reči iz fajla: ${error}`);
+    console.error(`Greška pri dodavanju reči: ${error.message}`);
   }
 }
 
-// Pozovi funkciju
-addWordsFromFile();
+// Ako je skripta pokrenuta direktno sa komandne linije, obradi argumente
+if (process.argv.length < 3) {
+  console.log('Upotreba: node add-words-from-file.js putanja/do/fajla.txt');
+} else {
+  const filePath = process.argv[2];
+  addWordsFromFile(filePath);
+}
+
+export { addWordsFromFile };

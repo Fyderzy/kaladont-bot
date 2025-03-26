@@ -3,6 +3,8 @@ import { GameManager } from './game-manager';
 import { handleCommand } from './commands';
 import { WordValidator } from './word-validator';
 import { log } from '../vite';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export class DiscordBot {
   private client: Client;
@@ -21,8 +23,8 @@ export class DiscordBot {
       ],
     });
 
-    // Get Discord bot token from environment variable
-    this.token = process.env.DISCORD_BOT_TOKEN || '';
+    // Try to read token from config file first
+    this.token = this.getTokenFromConfig() || process.env.DISCORD_BOT_TOKEN || '';
     if (!this.token) {
       log('Discord bot token not found. Bot will not start.', 'discord-bot');
     }
@@ -35,6 +37,27 @@ export class DiscordBot {
 
     // Set up event handlers
     this.setupEventHandlers();
+  }
+
+  /**
+   * Attempt to read the Discord bot token from config file
+   */
+  private getTokenFromConfig(): string {
+    try {
+      const configPath = path.resolve(__dirname, '../config/bot-config.json');
+      if (fs.existsSync(configPath)) {
+        const configData = fs.readFileSync(configPath, 'utf8');
+        const config = JSON.parse(configData);
+        // Only return if token has actually been set (not the placeholder value)
+        if (config.token && config.token !== 'DISCORD_BOT_TOKEN') {
+          log('Using token from config file', 'discord-bot');
+          return config.token;
+        }
+      }
+    } catch (error) {
+      log(`Error reading config file: ${error}`, 'discord-bot');
+    }
+    return '';
   }
 
   private setupEventHandlers() {
