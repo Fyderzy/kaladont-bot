@@ -112,6 +112,17 @@ export class GameManager {
         error: 'Nema aktivne igre u ovom kanalu. Koristite `!kaladont` da započnete novu igru.'
       };
     }
+
+    // Check if the same player is trying to play twice in a row
+    if (game.playedWords.length > 0) {
+      const lastPlayer = game.playedWords[game.playedWords.length - 1];
+      if (lastPlayer.playerId === playerId) {
+        return {
+          valid: false,
+          error: `Ne možete igrati dva puta zaredom. Sačekajte da neko drugi kaže reč.`
+        };
+      }
+    }
     
     // Check if the word starts with the correct letters
     if (!word.startsWith(game.nextLetters)) {

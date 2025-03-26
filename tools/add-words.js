@@ -40,6 +40,9 @@ async function readWordsFromCommandLine() {
 
   console.log("Unesite srpske reči za dodavanje u rečnik (jednu po liniji).");
   console.log("Kada završite, unesite 'KRAJ' ili 'END' za kraj unosa.");
+
+  [
+    "noga", "aditiv", "bara" , "bata" , "batak" , "camac" , "erozija" , "lasta" "lako" , "laz " , "lazan" , "jagodina" , "jagoda" , "jaguar" , "kamenjak" , "nakovanj"  
   
   const words = [];
   
