@@ -69,6 +69,9 @@ export class DiscordBot {
     // Handle ready event
     this.client.on(Events.ClientReady, () => {
       log(`Logged in as ${this.client.user?.tag}`, 'discord-bot');
+      
+      // Set the bot's presence to "Listening to !help"
+      this.client.user?.setActivity('!help', { type: 2 }); // Type 2 is LISTENING
     });
 
     // Handle message event
