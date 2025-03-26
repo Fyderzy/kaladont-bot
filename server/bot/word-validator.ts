@@ -16,7 +16,7 @@ export class WordValidator {
     const __dirname = path.dirname(__filename);
     
     // Set path to the dictionary file
-    this.dictionaryPath = path.resolve(__dirname, '../data/serbian-dictionary-5000.json');
+    this.dictionaryPath = path.resolve(__dirname, '../data/serbian-dictionary-expanded.json');
     
     // Load the dictionary
     this.loadDictionary();
@@ -101,7 +101,10 @@ export class WordValidator {
     const result: string[] = [];
     letters = letters.toLowerCase();
     
-    for (const word of this.dictionary) {
+    // Convert Set to Array before iteration to avoid compatibility issues
+    const wordsArray = Array.from(this.dictionary);
+    
+    for (const word of wordsArray) {
       if (word.startsWith(letters)) {
         result.push(word);
       }
