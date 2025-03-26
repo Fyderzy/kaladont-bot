@@ -1,25 +1,27 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, Book, CheckCircle, ExternalLink, HelpCircle, Terminal } from "lucide-react";
+import { AlertCircle, Book, CheckCircle, Database, ExternalLink, HelpCircle, Terminal } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import { apiRequest } from "@/lib/queryClient";
+import { Link } from "wouter";
+
+interface BotStatus {
+  online: boolean;
+  guildCount: number;
+  activeGames: number;
+}
 
 export default function Home() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [status, setStatus] = useState<{
-    online: boolean;
-    guildCount: number;
-    activeGames: number;
-  } | null>(null);
+  const [status, setStatus] = useState<BotStatus | null>(null);
 
   useEffect(() => {
     const fetchStatus = async () => {
       try {
         setIsLoading(true);
-        const response = await apiRequest("GET", "/api/bot/status", undefined);
-        const data = await response.json();
+        const data = await apiRequest<BotStatus>("/api/bot/status");
         setStatus(data);
       } catch (error) {
         toast({
